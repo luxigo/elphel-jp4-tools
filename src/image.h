@@ -2,37 +2,8 @@
 #define IMAGE_H 1
 
 // TODO: better memory management
-// TODO: block based access
 
 #include <stdint.h>
-
-template <typename T>
-struct PixelL {
-
-  static const uint8_t _n_channel = 1;
-
-  union {
-    T _channel[_n_channel];
-    struct {
-      T _L;
-    };
-  };
-
-  PixelL() { _L = T(); }
-  PixelL(T iL) { _L = iL; }
-  PixelL(const PixelL<T>& i) { _L = i.L_; }
-
-  T& L() { return _L; }
-
-  const T& L() const { return _L; }
-
-  T& L(T L) { _L = L; return *this; }
-
-  T& operator[](uint8_t i) { return _channel[i]; }
-
-  PixelL<T>& operator=(const PixelL<T>& i) { _L = i.L(); return *this; } 
-
-};
 
 template <typename T>
 struct PixelRGB {
@@ -91,11 +62,9 @@ public:
 
   T* data() const { return _data; }
 
-  /*
   Image<T> block(uint16_t y, uint16_t x) {
     return Image<T>(*this, y, x);
   }
-  */
 
   // raw access
   T& operator[](int32_t i) const { return _data[i]; }
@@ -120,17 +89,15 @@ public:
 
 protected:
 
-  /*
   Image(const Image& img, uint16_t yoffset, uint16_t xoffset) {
-    _data = img.data();
-    _ysize = img.ysize();
-    _xsize = img.xsize();
-    _yoffset = yoffset;
-    _xoffset = xoffset;
+    _data  = img._data;
+    _ysize = img._ysize;
+    _xsize = img._xsize;
     _ystep = img._ystep;
     _xstep = img._xstep;
+    _yorigin = img._yorigin + yoffset*img._ystep;
+    _xorigin = img._xorigin + xoffset*img._xstep;
   }
-  */
 
 private:
   T* _data;
@@ -149,29 +116,19 @@ private:
 typedef PixelRGB<uint8_t>  PixelRGB8i;
 typedef PixelRGB<uint16_t> PixelRGB16i;
 typedef PixelRGB<uint32_t> PixelRGB32i;
-
 typedef PixelRGB<float>  PixelRGB32f;
 typedef PixelRGB<double> PixelRGB64f;
-
-typedef PixelL<uint8_t>  PixelL8i;
-typedef PixelL<uint16_t> PixelL16i;
-typedef PixelL<uint32_t> PixelL32i;
-
-typedef PixelL<float>  PixelL32f;
-typedef PixelL<double> PixelL64f;
 
 typedef Image<PixelRGB8i>  ImageRGB8i;
 typedef Image<PixelRGB16i> ImageRGB16i;
 typedef Image<PixelRGB32i> ImageRGB32i;
-
 typedef Image<PixelRGB32f> ImageRGB32f;
 typedef Image<PixelRGB64f> ImageRGB64f;
 
-typedef Image<PixelL8i>  ImageL8i;
-typedef Image<PixelL16i> ImageL16i;
-typedef Image<PixelL32i> ImageL32i;
-
-typedef Image<PixelL32f> ImageL32f;
-typedef Image<PixelL64f> ImageL64f;
+typedef Image<uint8_t>  ImageL8i;
+typedef Image<uint16_t> ImageL16i;
+typedef Image<uint32_t> ImageL32i;
+typedef Image<float>    ImageL32f;
+typedef Image<double>   ImageL64f;
 
 #endif
