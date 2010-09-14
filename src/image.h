@@ -2,6 +2,7 @@
 #define IMAGE_H 1
 
 // TODO: better memory management
+// TODO: port to Win32 and MacOS
 
 #include <stdint.h>
 
@@ -45,7 +46,7 @@ template <typename T>
 class Image {
 public:
 
-  Image(uint16_t ysize, uint16_t xsize) {
+  Image(uint16_t xsize, uint16_t ysize) {
     _data = new T[ysize*xsize];
     _ysize = ysize;
     _xsize = xsize;
@@ -67,11 +68,11 @@ public:
   }
 
   // raw access
-  T& operator[](int32_t i) const { return _data[i]; }
+  T& operator[](uint32_t i) const { return _data[i]; }
 
   // smart access
-  T& operator()(int16_t y) const { return _data[ (_yorigin+y*_ystep) ]; }
-  T& operator()(int16_t y, uint16_t x) const { return _data[ (_yorigin+y*_ystep)+(_xorigin+x*_xstep) ]; }
+  T& operator()(uint16_t y) const { return _data[ (_yorigin+y*_ystep) ]; }
+  T& operator()(uint16_t y, uint16_t x) const { return _data[ (_yorigin+y*_ystep)+(_xorigin+x*_xstep) ]; }
 
   void flipX() {
     _xstep   = -_xstep;
@@ -105,11 +106,11 @@ private:
   uint16_t _ysize;
   uint16_t _xsize;
 
-  uint16_t _yorigin;
-  uint16_t _xorigin;
+  uint32_t _yorigin;
+  uint32_t _xorigin;
 
-  int16_t _ystep;
-  int16_t _xstep;
+  int32_t _ystep;
+  int32_t _xstep;
 
 };
 
