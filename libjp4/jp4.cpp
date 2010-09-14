@@ -41,6 +41,8 @@ JP4::~JP4() {
     delete[] _data;
   if (_raw_app1)
     delete[] _raw_app1;
+  if (_ed)
+    exif_data_free(_ed);
 }
 
 const string& JP4::filename() const {
@@ -137,6 +139,7 @@ void JP4::open(const string& _filename) {
           _data[x + i + h_of + b_of] = temp[x + index1[i] + index2[j] + b_of];
 
   jpeg_finish_decompress (&dinfo);
+  jpeg_destroy_decompress (&dinfo);
   fclose(ifp);
   delete[] temp;
 
@@ -272,7 +275,7 @@ void JP4::writeJPEG(const string& jpegFilename, unsigned int quality) const {
   struct jpeg_error_mgr jerr;
   struct jpeg_compress_struct cinfo;
 
-  unsigned int i, j, r, row, col, jj;
+  unsigned int i, j;
 
   JSAMPARRAY buf;
   JSAMPARRAY copy;
@@ -312,6 +315,7 @@ void JP4::writeJPEG(const string& jpegFilename, unsigned int quality) const {
   }
 
   jpeg_finish_compress (&cinfo);
+  jpeg_destroy_compress (&cinfo);
 
   fclose(ofp);
 
