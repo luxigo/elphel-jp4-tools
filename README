@@ -1,15 +1,15 @@
-movie2dng
+jp4-tools
 =========
 
-This is a utility program to convert Elphel's JP4 movies
-to DNG and JPEG frames in standard Bayer format.
+This is a set of utilities to manipulate Elphel's JP4 images
+and movies.
 
-Usage
-=====
+jp4-convert
+===========
 
-To use it, call movie2dng as follow:
+This program convert JP4 images and movies to many formats, include DNG.
 
-movie2dng --dng filename.mov my-dng-frame-%05d
+See jp4-convert --help for usage.
 
 
 Building

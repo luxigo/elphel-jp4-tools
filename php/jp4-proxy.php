@@ -2,20 +2,20 @@
 /*
   Copyright 2010 Paulo Henrique Silva <ph.silva@gmail.com>
 
-  This file is part of movie2dng.
+  This file is part of jp4-tools.
 
-  movie2dng is free software: you can redistribute it and/or modify
+  jp4-tools is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
   (at your option) any later version.
   
-  movie2dng is distributed in the hope that it will be useful,
+  jp4-tools is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
   
   You should have received a copy of the GNU General Public License
-  along with movie2dng.  If not, see <http://www.gnu.org/licenses/>.
+  along with jp4-tools.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 function help() {
@@ -46,7 +46,7 @@ if (!is_resource($input_fp))
 $proc_descriptors = array(0 => array("pipe", "r"),
                           1 => array("pipe", "w"));
 
-$proc = proc_open("movie2dng --jpeg --stdout -",
+$proc = proc_open("jp4-tools --jpeg --stdout -",
                   $proc_descriptors, $pipes, NULL, NULL, array("binary_pipes"=>TRUE));
 
 if (!is_resource($proc))

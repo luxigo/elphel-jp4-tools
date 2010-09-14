@@ -1,0 +1,6 @@
+*.o
+*.os
+*.so
+*.a
+.sconsign.dblite
+tools/jp4-convert

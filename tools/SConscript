@@ -1,0 +1,15 @@
+Import("env bin_DIR")
+
+env = env.Clone()
+env.Append(CPPPATH=["#"])
+env.Append(LIBPATH=["#libjp4"])
+
+env.MergeFlags("-Wall -Wextra")
+env.MergeFlags("-Wl,-rpath=%s" % env.Dir("#libjp4").abspath)
+
+# jp4-convert
+jp4_convert = env.Program("jp4-convert", source=["jp4-convert.cpp"], LIBS=["libjp4"])
+
+# installation
+env.Install(bin_DIR, jp4_convert)
+env.Alias("install", bin_DIR)

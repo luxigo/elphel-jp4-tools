@@ -13,13 +13,13 @@ include /usr/share/cdbs/1/rules/buildcore.mk
 include /usr/share/cdbs/1/rules/utils.mk
 include /usr/share/cdbs/1/rules/debhelper.mk
 
-DEB_DH_STRIP_ARGS := --dbg-package=movie2dng
+DEB_DH_STRIP_ARGS := --dbg-package=jp4-tools
 
 DEB_SCONS_ENVVARS :=
 DEB_SCONS_INVOKE = $(DEB_SCONS_ENVVARS) scons 
 
 PREFIX = $(DEB_DESTDIR)/usr
-BUILD_FILES = SConstruct src extra
+BUILD_FILES = SConstruct libjp4 tools
 
 common-build-arch:: debian/stamp-scons-build
 debian/stamp-scons-build:
@@ -28,7 +28,7 @@ debian/stamp-scons-build:
 	cd build-generic && $(DEB_SCONS_INVOKE) 'ARCH=$(CFLAGS)' PREFIX=$(PREFIX)
 	touch $@
 
-install/movie2dng::
+install/jp4-tools::
 	cd build-generic && $(DEB_SCONS_INVOKE) 'ARCH=$(CFLAGS)' PREFIX=$(PREFIX) install
 
 clean:: scons-clean

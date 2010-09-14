@@ -1,25 +1,24 @@
 /*
   Copyright 2010 Paulo Henrique Silva <ph.silva@gmail.com>
 
-  This file is part of movie2dng.
+  This file is part of jp4-tools.
 
-  movie2dng is free software: you can redistribute it and/or modify
+  jp4-tools is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
   (at your option) any later version.
   
-  movie2dng is distributed in the hope that it will be useful,
+  jp4-tools is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
   
   You should have received a copy of the GNU General Public License
-  along with movie2dng.  If not, see <http://www.gnu.org/licenses/>.
+  along with jp4-tools.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "jp4.h"
-#include "movie.h"
-#include "dngwriter.h"
+#include <libjp4/jp4.h>
+#include <libjp4/movie.h>
 
 extern "C" {
 #include <getopt.h>
@@ -223,9 +222,11 @@ int main (int argc, char** argv) {
   char dngFilename[_POSIX_PATH_MAX];
   char pgmFilename[_POSIX_PATH_MAX];
 
+  int formats = (int)save_dng + (int)save_pgm + (int)save_jpeg;
+
   if (is_jp4 || is_jp46 || is_stdin) {
 
-    if ((save_dng && save_pgm) || (save_dng && save_jpeg) || (save_pgm && save_jpeg)) {
+    if (formats > 1 && save_to_stdout) {
         fprintf(stderr, "Cannot choose --stdout and multiple output formats.\n");
         exit(1);
       }
@@ -253,7 +254,7 @@ int main (int argc, char** argv) {
       jp4.open(jp4Filename);
 
       if (save_dng)
-        DNGWriter::write(jp4, dngFilename, bayer_shift);
+        jp4.writeDNG(dngFilename, bayer_shift);
 
       if (save_pgm)
         jp4.writePGM(pgmFilename);
@@ -306,7 +307,7 @@ int main (int argc, char** argv) {
 
       // convert to DNG
       if (save_dng)
-        DNGWriter::write(jp4, dngFilename, bayer_shift);
+        jp4.writeDNG(dngFilename, bayer_shift);
 
       if (save_pgm)
         jp4.writePGM(pgmFilename);
