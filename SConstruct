@@ -24,9 +24,13 @@ env.MergeFlags("-ffunction-sections -fdata-sections")
 # system dependent variables
 env.MergeFlags(ARCH_CFLAGS)
 
+# general compiler definitions
+env.Append(CPPDEFINES=["-D__STDC_CONSTANT_MACROS"])
+
 # exports
 env.Export("env", "bin_DIR", 'lib_DIR')
 
 # subdirs
 env.SConscript("libjp4/SConscript")
 env.SConscript("tools/SConscript")
+env.SConscript("tests/SConscript")

@@ -1,0 +1,18 @@
+import os
+from sys import platform
+
+Import("env")
+
+env = env.Clone()
+env.SConscript("#libjp4/SConscript.externals")
+
+env.Append(CPPPATH=["#"])
+env.Append(LIBPATH=["#libjp4"])
+
+env.MergeFlags("-Wall -Wextra")
+
+if platform == "linux2":
+	env.MergeFlags("-Wl,-rpath=%s" % env.Dir("#libjp4").abspath)
+	
+test_image = env.Program("test_image", source=["test_image.cpp"], LIBS=["libjp4"])
+

@@ -5,6 +5,10 @@
 // TODO: port to Win32 and MacOS
 
 #include <stdint.h>
+#include <cassert>
+#include <cstring>
+
+#include <libjp4/misc.h>
 
 template <typename T>
 struct PixelRGB {
@@ -46,14 +50,16 @@ template <typename T>
 class Image {
 public:
 
+  Image() {
+    _data = 0;
+    _ysize = 0;
+    _xsize = 0;
+  }
+
   Image(uint16_t xsize, uint16_t ysize) {
     _data = new T[ysize*xsize];
     _ysize = ysize;
     _xsize = xsize;
-    _yorigin = 0;
-    _xorigin = 0;
-    _ystep = xsize;
-    _xstep = 1; 
   }
 
   //virtual ~Image() { delete[] _data; }
@@ -63,41 +69,119 @@ public:
 
   T* data() const { return _data; }
 
-  Image<T> block(uint16_t y, uint16_t x) {
-    return Image<T>(*this, y, x);
-  }
-
   // raw access
   T& operator[](uint32_t i) const { return _data[i]; }
 
   // smart access
-  T& operator()(uint16_t y) const { return _data[ (_yorigin+y*_ystep) ]; }
-  T& operator()(uint16_t y, uint16_t x) const { return _data[ (_yorigin+y*_ystep)+(_xorigin+x*_xstep) ]; }
+  T& operator()(uint16_t y) const { return _data[ y*_xsize ]; }
+  T& operator()(uint16_t y, uint16_t x) const { return _data[ y*_xsize+x ]; }
 
+  T& at(uint16_t y) const { return operator()(y); }
+  T& at(uint16_t y, uint16_t x) const { return operator()(y,x); }
+
+  // transforms
   void flipX() {
-    _xstep   = -_xstep;
-    _xorigin = _xorigin? 0: _xsize-1;
+    
+    for (uint16_t y_src = 0, y_dst=_ysize-1; y_src < _ysize/2; y_src++, y_dst--) {
+      for (uint16_t x_src = 0; x_src < _xsize; x_src++) {
+        uint32_t src = y_src*_xsize + x_src;
+        uint32_t dst = y_dst*_xsize + x_src;
+        T tmp = _data[src];
+        _data[src] = _data[dst];
+        _data[dst] = tmp;
+      }
+    }
   }
 
   void flipY() {
-    _ystep   = -_ystep;
-    _yorigin = _yorigin? 0: (_ysize-1)*_xsize;
+    for (uint16_t y_src = 0; y_src < _ysize; y_src++) {
+      for (uint16_t x_src = 0, x_dst=_xsize-1; x_src < _xsize/2; x_src++, x_dst--) {
+        uint32_t src = y_src*_xsize + x_src;
+        uint32_t dst = y_src*_xsize + x_dst;
+        T tmp = _data[src];
+        _data[src] = _data[dst];
+        _data[dst] = tmp;
+      }
+    }
   }
 
-  void flipXY() { flipX(); flipY(); }
+  void flipXY() {
+    flipX(); flipY();
+  }
 
-  void flipNone() { _xorigin = _yorigin = 0; _ystep = _xsize; _xstep = 1; }
+  void rotate(ImageRotation angle) {
 
-protected:
+    switch (angle) {
 
-  Image(const Image& img, uint16_t yoffset, uint16_t xoffset) {
-    _data  = img._data;
-    _ysize = img._ysize;
-    _xsize = img._xsize;
-    _ystep = img._ystep;
-    _xstep = img._xstep;
-    _yorigin = img._yorigin + yoffset*img._ystep;
-    _xorigin = img._xorigin + xoffset*img._xstep;
+    case ROTATE_0:
+      break;
+
+    case ROTATE_90: {
+      T* _newData = new T[_xsize*_ysize];
+
+      for (uint16_t y_src = 0, y_dst=_ysize; y_src < _ysize; y_src++, y_dst--) {
+        for (uint16_t x_src = 0; x_src < _xsize; x_src++) {
+          uint32_t src = y_src*_xsize + x_src;
+          uint32_t dst = x_src*_ysize + y_dst;
+          _newData[dst] = _data[src];
+        }
+      }
+
+      delete[] _data;
+      _data = _newData;
+
+      uint16_t _xsize_tmp = _xsize;
+      _xsize = _ysize;
+      _ysize = _xsize_tmp;
+      break;
+    }
+     
+    case ROTATE_180: {
+      flipX(); flipY();
+      break;
+    }
+
+    case ROTATE_270: {
+      T* _newData = new T[_xsize*_ysize];
+
+      for (uint16_t y_src = 0; y_src < _ysize; y_src++) {
+        for (uint16_t x_src = 0, x_dst=_xsize-1; x_src < _xsize; x_src++, x_dst--) {
+          uint32_t src = y_src*_xsize + x_src;
+          uint32_t dst = x_dst*_ysize + y_src;
+          _newData[dst] = _data[src];
+        }
+      }
+
+      delete[] _data;
+      _data = _newData;
+
+      uint16_t _xsize_tmp = _xsize;
+      _xsize = _ysize;
+      _ysize = _xsize_tmp;
+      break;
+    }
+
+    default:
+      break;
+
+    }
+  }
+
+  Image<T>* crop(uint16_t x, uint16_t y, uint16_t xsize, uint16_t ysize) {
+
+    assert(x < _xsize);
+    assert(y < _ysize);
+    assert(x+xsize <= _xsize);
+    assert(y+ysize <= _ysize);
+
+    Image<T>* cropped = new Image<T>(xsize, ysize);
+
+    for (uint16_t i = 0; i < cropped->ysize(); i++)
+      for (uint16_t j = 0; j < cropped->xsize(); j++)
+        cropped->at(i,j) = this->at(i+y,j+x);
+
+    return cropped;
+
   }
 
 private:
@@ -105,13 +189,6 @@ private:
 
   uint16_t _ysize;
   uint16_t _xsize;
-
-  uint32_t _yorigin;
-  uint32_t _xorigin;
-
-  int32_t _ystep;
-  int32_t _xstep;
-
 };
 
 typedef PixelRGB<uint8_t>  PixelRGB8i;
