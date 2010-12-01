@@ -20,6 +20,9 @@
 #ifndef JP4_H
 #define JP4_H 1
 
+#include <libjp4/image.h>
+#include <libjp4/bayer.h>
+
 #include <string>
 using std::string;
 
@@ -57,6 +60,7 @@ typedef struct {
   int    height3;
   bool   flip_h3;
   bool   flip_v3;
+  bool   portrait;
 } ElphelMakerNote;
 
 class JP4 {
@@ -66,7 +70,7 @@ class JP4 {
   JP4();
   ~JP4();
 
-  void open(const string& _filename);
+  bool open(const string& _filename);
 
   const string& filename() const;
 
@@ -75,21 +79,23 @@ class JP4 {
 
   unsigned short* data() const;
 
+  ImageL16i* image() const;
+
+  Bayer* bayer();
+
   const ElphelMakerNote& makerNote() const;
 
+  unsigned int makerNoteLength() const;
+
   bool linear() const;
+
+  JP4* crop(unsigned int x, unsigned int y, unsigned int width, unsigned int height);
 
   void writePGM(const string& pgmFilename) const;
 
   void writeJPEG(const string& jpegFilename, unsigned int quality) const;
 
   void writeDNG(const string& dngFilename, int bayerShift = -1) const;
-
-  //
-  // image manipulation
-  //
-  void flipX();
-  void flipY();
 
   //
   // EXIF support
@@ -115,10 +121,12 @@ class JP4 {
   void readMakerNote();
 
   string _filename;
-  unsigned int _width;
-  unsigned int _height;
-  unsigned short* _data;
+
+  ImageL16i* _image;
+  Bayer      _bayer;
+
   ElphelMakerNote _makerNote;
+  unsigned int    _makerNoteLength;
 
   bool _linear;
 

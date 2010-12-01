@@ -251,7 +251,11 @@ int main (int argc, char** argv) {
       }
 
       JP4 jp4;
-      jp4.open(jp4Filename);
+
+      if (!jp4.open(jp4Filename)) {
+				fprintf(stderr, "Cannot open %s.\n", jp4Filename);
+				exit(1);
+			}
 
       if (save_dng)
         jp4.writeDNG(dngFilename, bayer_shift);

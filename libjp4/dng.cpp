@@ -255,39 +255,39 @@ void JP4::writeDNG(const string& dngFilename, int bayerShift) const {
 
   negative->SetAnalogBalance(gain);
   
-  // bayer
-  negative->SetRGB();
+		// bayer
+	negative->SetRGB();
 
-  bool flip_hor = makerNote().flip_hor;
-  bool flip_ver = makerNote().flip_ver;
+	bool flip_hor = makerNote().flip_hor;
+	bool flip_ver = makerNote().flip_ver;
 
-  // see http://www.mozoft.com/tifftest/ContactSheet-001.gif for Orientation hints
+	// see http://www.mozoft.com/tifftest/ContactSheet-001.gif for Orientation hints
 
-  // G R
-  // B G
-  if (flip_hor == 0 && flip_ver == 0) {
-    negative->SetBayerMosaic(0);
-    negative->SetBaseOrientation(dng_orientation::Normal());
-  // R G
-  // G B
-  } else if (flip_hor == 1 && flip_ver == 0) {
-    negative->SetBayerMosaic(1);
-    negative->SetBaseOrientation(dng_orientation::Mirror());
-  // B G
-  // G R
-  } else if (flip_hor == 0 && flip_ver == 1) {
-    negative->SetBayerMosaic(2);
-    negative->SetBaseOrientation(dng_orientation::Mirror180());
-  // G B
-  // R G
-  } else if (flip_hor == 1 && flip_ver == 1) {
-    negative->SetBayerMosaic(3);
-    negative->SetBaseOrientation(dng_orientation::Rotate180());
-  }
+	// G R
+	// B G
+	if (flip_hor == 0 && flip_ver == 0) {
+	  negative->SetBayerMosaic(0);
+	  negative->SetBaseOrientation(dng_orientation::Normal());
+	// R G
+	// G B
+	} else if (flip_hor == 1 && flip_ver == 0) {
+	  negative->SetBayerMosaic(1);
+	  negative->SetBaseOrientation(dng_orientation::Mirror());
+	// B G
+	// G R
+	} else if (flip_hor == 0 && flip_ver == 1) {
+	  negative->SetBayerMosaic(2);
+	  negative->SetBaseOrientation(dng_orientation::Mirror180());
+	// G B
+	// R G
+	} else if (flip_hor == 1 && flip_ver == 1) {
+	  negative->SetBayerMosaic(3);
+	  negative->SetBaseOrientation(dng_orientation::Rotate180());
+	}
 
-  // Override bayer shift if asked
-  if (bayerShift != -1)
-    negative->SetBayerMosaic(bayerShift);
+	// Override bayer shift if asked
+	if (bayerShift != -1)
+	  negative->SetBayerMosaic(bayerShift);
 
   // -------------------------------------------------------------------------------
 
@@ -424,8 +424,8 @@ void JP4::writeDNG(const string& dngFilename, int bayerShift) const {
   // Compute demosaiced image (used by preview and thumbnail)
   negative->BuildStage3Image(host);
 
-  //negative->SynchronizeMetadata();
-  //negative->RebuildIPTC(true, false);
+  negative->SynchronizeMetadata();
+  negative->RebuildIPTC(true, false);
 
   // DNGWriter: DNG thumbnail creation
 

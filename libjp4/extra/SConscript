@@ -35,4 +35,4 @@ md5_SRC  = env.Glob("md5/*.cpp")
 
 # exports
 
-env.Export(extra_ENV=env, extra_SRC=dng_SRC+xmp_SRC+md5_SRC)
+env.Export({"extra_ENV":env, "extra_SRC":dng_SRC+xmp_SRC+md5_SRC})

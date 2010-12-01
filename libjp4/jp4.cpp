@@ -37,12 +37,8 @@ static long get_long(unsigned char* d) {
 JP4::JP4() {}
 
 JP4::~JP4() {
-  if (_data)
-    delete[] _data;
-  if (_raw_app1)
-    delete[] _raw_app1;
-  if (_ed)
-    exif_data_free(_ed);
+  if (_raw_app1) delete[] _raw_app1;
+  if (_ed) exif_data_free(_ed);
 }
 
 const string& JP4::filename() const {
@@ -50,26 +46,55 @@ const string& JP4::filename() const {
 }
 
 unsigned int JP4::width() const {
-  return _width;
+  return _image->xsize();
 }
 
 unsigned int JP4::height() const {
-  return _height;
+  return _image->ysize();
 }
 
 unsigned short* JP4::data() const {
-  return _data;
+  return _image->data();
+}
+
+ImageL16i* JP4::image() const {
+  return _image;
+}
+
+Bayer* JP4::bayer() {
+  return &_bayer;
 }
 
 const ElphelMakerNote& JP4::makerNote() const {
   return _makerNote;
 }
 
+unsigned int JP4::makerNoteLength() const {
+  return _makerNoteLength;
+}
+
 bool JP4::linear() const {
   return _linear;
 }
 
-void JP4::open(const string& _filename) {
+JP4* JP4::crop(unsigned int x, unsigned int y, unsigned int width, unsigned int height) {
+
+  JP4* cropped = new JP4();
+  cropped->_filename  = _filename;
+  cropped->_makerNote = _makerNote;
+  cropped->_makerNoteLength = _makerNoteLength;
+  cropped->_linear = _linear;
+  cropped->_raw_app1 = _raw_app1;
+  cropped->_raw_app1_length = _raw_app1_length;
+  cropped->_ed = _ed;
+  cropped->_bayer = _bayer;
+
+  cropped->_image = _image->crop(x, y, width, height);
+  return cropped;
+
+}
+
+bool JP4::open(const string& _filename) {
 
   this->_filename = string(_filename);
 
@@ -83,6 +108,9 @@ void JP4::open(const string& _filename) {
   dinfo.err = jpeg_std_error (&jerr);
 
   ifp = fopen(filename().c_str(), "rb");
+
+	if (!ifp)
+		return false;
 
   jpeg_create_decompress (&dinfo);
   jpeg_stdio_src (&dinfo, ifp);
@@ -100,16 +128,12 @@ void JP4::open(const string& _filename) {
     memcpy(_raw_app1, dinfo.marker_list[0].data, _raw_app1_length);
   }
 
-  this->_width = dinfo.image_width;
-  this->_height = dinfo.image_height;
-
-  buffer = (*dinfo.mem->alloc_sarray)((j_common_ptr)&dinfo, JPOOL_IMAGE, width(), 1);
-  
-  _data = new unsigned short[width()*height()];
-
-  jpeg_start_decompress (&dinfo);
+  _image = new ImageL16i(dinfo.image_width, dinfo.image_height);
 
   unsigned short* temp = new unsigned short[width()*height()];
+  buffer = (*dinfo.mem->alloc_sarray)((j_common_ptr)&dinfo, JPOOL_IMAGE, width(), 1);
+
+  jpeg_start_decompress (&dinfo);
 
   for (unsigned int line = 0; line < height(); line++) {
     jpeg_read_scanlines (&dinfo, buffer, 1);
@@ -136,13 +160,13 @@ void JP4::open(const string& _filename) {
     for (x = 0; x < width(); x += 16)
       for (j = 0, h_of = 0; j < 16; ++j, h_of += width())
         for (i = 0; i < 16; ++i)
-          _data[x + i + h_of + b_of] = temp[x + index1[i] + index2[j] + b_of];
+          (*_image)[x + i + h_of + b_of] = temp[x + index1[i] + index2[j] + b_of];
 
   jpeg_finish_decompress (&dinfo);
   jpeg_destroy_decompress (&dinfo);
   fclose(ifp);
   delete[] temp;
-
+	return true;
 }
 
 void JP4::readMakerNote() {
@@ -165,12 +189,14 @@ void JP4::readMakerNote() {
     _makerNote.decim_ver = 1;
     _makerNote.bin_hor = 1;
     _makerNote.bin_ver = 1;
+    _makerNote.composite = 0;
+   return;
   }
 
-  int makerNoteLength = makerNoteEntry->size/4;
-  long makerNote[makerNoteLength];
+  _makerNoteLength = makerNoteEntry->size/4;
+  long makerNote[_makerNoteLength];
 
-  for (int i = 0; i < makerNoteLength; i++) {
+  for (int i = 0; i < _makerNoteLength; i++) {
     makerNote[i] = get_long(makerNoteEntry->data + i*4);
   }
 
@@ -184,7 +210,7 @@ void JP4::readMakerNote() {
     _makerNote.black[i]       =  (makerNote[i+4]>>24) / 256.0;
   }
 
-  if (makerNoteLength >= 12) {
+  if (_makerNoteLength >= 12) {
     _makerNote.woi_left   = (makerNote[8] & 0xffff);
     _makerNote.woi_width  = (makerNote[8]>>16) & 0xffff;
     _makerNote.woi_top    = (makerNote[9] & 0xffff);
@@ -203,8 +229,9 @@ void JP4::readMakerNote() {
     _makerNote.bin_ver = (makerNote[10]>>20) & 0x0f;
   }
 
-  if (makerNoteLength >= 14) {
-    _makerNote.composite = ((makerNote[10] & 0xc0000000)!=0);
+  _makerNote.composite = ((makerNote[10] & 0xc0000000)!=0);
+
+  if (_makerNoteLength >= 14) {
     if (_makerNote.composite) {
       _makerNote.height1 = makerNote[11] & 0xffff;
       _makerNote.blank1  =(makerNote[11]>>16) & 0xffff;
@@ -218,108 +245,11 @@ void JP4::readMakerNote() {
       _makerNote.flip_v2 = (((makerNote[10] >> 27) & 1)!=0);
       _makerNote.flip_h3 = (((makerNote[10] >> 28) & 1)!=0);
       _makerNote.flip_v3 = (((makerNote[10] >> 29) & 1)!=0);
+
+      _makerNote.portrait = (((makerNote[13] >>  7) & 1)!=0);
     }
   }
 
-}
-
-void JP4::flipX() {
-
-  for (unsigned int y = 0; y < _height/2; y++) {
-    for (unsigned int x = 0; x < _width; x++) {
-      unsigned int src = y*_width + x;
-      unsigned int dst = (_height-y-1)*_width + x;
-
-      unsigned short tmp = _data[src];
-      _data[src] = _data[dst];
-      _data[dst] = tmp;
-    }
-  }
-
-}
- 
-void JP4::flipY() {
-
-  for (unsigned int y = 0; y < _height; y++) {
-    for (unsigned int x = 0; x < _width/2; x++) {
-      unsigned int src = y*_width + x;
-      unsigned int dst = y*_width + (_width-x-1);
-
-      unsigned short tmp = _data[src];
-      _data[src] = _data[dst];
-      _data[dst] = tmp;
-    }
-  }
-
-}
-
-void JP4::writePGM(const string& pgmFilename) const {
-
-  FILE* pgm = fopen(pgmFilename.c_str(), "w");
-  if (!pgm) return;
-
-  fprintf(pgm, "P2\n%d %d\n%d\n", _width, _height, 0xff);
-  for (unsigned int i = 0; i < _height; i++) {
-    for (unsigned int j = 0; j < _width; j++) {
-      fprintf(pgm, "%d ", _data[i*_width + j]);
-    }   
-    fprintf(pgm, "\n");
-  }
-
-  fclose(pgm);
-
-}
-
-void JP4::writeJPEG(const string& jpegFilename, unsigned int quality) const {
-
-  struct jpeg_error_mgr jerr;
-  struct jpeg_compress_struct cinfo;
-
-  unsigned int i, j;
-
-  JSAMPARRAY buf;
-  JSAMPARRAY copy;
-
-  FILE *ofp;
-
-  cinfo.err = jpeg_std_error (&jerr);
-
-  ofp = fopen(jpegFilename.c_str(), "wb");
-
-  jpeg_create_compress (&cinfo);
-  jpeg_stdio_dest (&cinfo, ofp);
-
-  cinfo.image_width = _width;
-  cinfo.image_height = _height;
-  cinfo.input_components = 1;
-  cinfo.in_color_space = JCS_GRAYSCALE;
-  jpeg_set_defaults(&cinfo);
-
-  jpeg_set_quality(&cinfo, quality, false);
-
-  jpeg_start_compress (&cinfo, TRUE);
-
-  // write EXIF data (if any)
-  if (_raw_app1) {
-    jpeg_write_marker(&cinfo, 0xe1, _raw_app1, _raw_app1_length);
-  }
-
-  unsigned char* scanline = new unsigned char[_width];
-
-  for (i=0; i < _height; i++) {
-
-    for (j=0; j < _width; j++)
-      scanline[j] = _data[i*_width + j];
-
-    jpeg_write_scanlines (&cinfo, &scanline, 1);
-  }
-
-  jpeg_finish_compress (&cinfo);
-  jpeg_destroy_compress (&cinfo);
-
-  fclose(ofp);
-
-  delete[] scanline;
 }
 
 ExifData* JP4::exifData() const {
