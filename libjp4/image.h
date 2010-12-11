@@ -1,8 +1,7 @@
 #ifndef IMAGE_H
 #define IMAGE_H 1
 
-// TODO: better memory management
-// TODO: port to Win32 and MacOS
+// TODO: port to Win32
 
 #include <stdint.h>
 #include <cassert>
@@ -49,9 +48,12 @@ struct PixelRGB {
 template <typename T>
 class Image {
 public:
-
+	
+	typedef T pixel_type;
+	typedef T& pixel_type_ref;
+	
   Image() {
-    _data = 0;
+    _data = NULL;
     _ysize = 0;
     _xsize = 0;
   }
@@ -62,7 +64,10 @@ public:
     _xsize = xsize;
   }
 
-  //virtual ~Image() { delete[] _data; }
+  virtual ~Image() {
+		if (_data)
+		  delete[] _data;
+	}
 
   uint16_t xsize() const { return _xsize; }
   uint16_t ysize() const { return _ysize; }
@@ -168,7 +173,6 @@ public:
   }
 
   Image<T>* crop(uint16_t x, uint16_t y, uint16_t xsize, uint16_t ysize) {
-
     assert(x < _xsize);
     assert(y < _ysize);
     assert(x+xsize <= _xsize);
@@ -181,7 +185,6 @@ public:
         cropped->at(i,j) = this->at(i+y,j+x);
 
     return cropped;
-
   }
 
 private:

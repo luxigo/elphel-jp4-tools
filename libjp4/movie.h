@@ -54,7 +54,7 @@ class Movie {
   Movie();
   virtual ~Movie();
 
-  int open(const string& filename);
+  bool open(const string& filename);
 
   unsigned int  nFrames() const;
   MovieIterator iterator(unsigned int start = -1, unsigned int end = -1);

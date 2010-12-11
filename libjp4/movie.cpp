@@ -56,33 +56,33 @@ bool MovieIterator::next(unsigned int* frame, void** data, unsigned int* size) {
 Movie::Movie(): ctx(NULL) {
 }
 
-int Movie::open(const string& filename) {
+bool Movie::open(const string& filename) {
 
   av_register_all();
 
   if (av_open_input_file(&ctx, filename.c_str(), NULL, 0, NULL) != 0) {
     fprintf(stderr, "ERROR: Cannot open file: '%s'.\n", filename.c_str());
-    return 0;
+    return false;
   }
 
   if (av_find_stream_info(ctx) < 0) {
     fprintf(stderr, "ERROR: Cannot find stream info.\n");
-    return 0;
+    return false;
   }
   
   AVCodecContext* codecCtx = ctx->streams[0]->codec;
   AVCodec* codec = avcodec_find_decoder(codecCtx->codec_id);
   if (!codec) {
     fprintf(stderr, "ERROR: Cannot find codec.");
-    return 0;
+    return false;
   }
   
   if (avcodec_open(codecCtx, codec) < 0) {
     fprintf(stderr, "ERROR: Cannot open codec.");
-    return 0;
+    return false;
   }
 
-  return 1;
+  return true;
 }
 
 Movie::~Movie() {

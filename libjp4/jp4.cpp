@@ -34,11 +34,12 @@ static long get_long(unsigned char* d) {
 
 }
 
-JP4::JP4() {}
+JP4::JP4():_image(NULL), _raw_app1(NULL), _ed(NULL) {}
 
 JP4::~JP4() {
   if (_raw_app1) delete[] _raw_app1;
   if (_ed) exif_data_free(_ed);
+  if (_image) delete _image;
 }
 
 const string& JP4::filename() const {
@@ -69,6 +70,10 @@ const ElphelMakerNote& JP4::makerNote() const {
   return _makerNote;
 }
 
+ElphelMakerNote& JP4::makerNote() {
+  return _makerNote;
+}
+
 unsigned int JP4::makerNoteLength() const {
   return _makerNoteLength;
 }
@@ -81,12 +86,13 @@ JP4* JP4::crop(unsigned int x, unsigned int y, unsigned int width, unsigned int 
 
   JP4* cropped = new JP4();
   cropped->_filename  = _filename;
-  cropped->_makerNote = _makerNote;
+  memcpy(&cropped->_makerNote, &_makerNote, sizeof(_makerNote));
   cropped->_makerNoteLength = _makerNoteLength;
   cropped->_linear = _linear;
-  cropped->_raw_app1 = _raw_app1;
+  cropped->_raw_app1 = new unsigned char[_raw_app1_length]; bzero(cropped->_raw_app1, _raw_app1_length);
+  memcpy(cropped->_raw_app1, _raw_app1, sizeof(_raw_app1));
   cropped->_raw_app1_length = _raw_app1_length;
-  cropped->_ed = _ed;
+  cropped->_ed = exif_data_new_from_data(cropped->_raw_app1, cropped->_raw_app1_length);
   cropped->_bayer = _bayer;
 
   cropped->_image = _image->crop(x, y, width, height);

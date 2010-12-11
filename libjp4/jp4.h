@@ -63,6 +63,13 @@ typedef struct {
   bool   portrait;
 } ElphelMakerNote;
 
+typedef struct {
+  int x;
+  int y;
+  int width;
+  int height;
+} ROI;
+
 class JP4 {
 
  public:
@@ -84,6 +91,8 @@ class JP4 {
   Bayer* bayer();
 
   const ElphelMakerNote& makerNote() const;
+
+  ElphelMakerNote& makerNote();
 
   unsigned int makerNoteLength() const;
 
