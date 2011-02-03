@@ -112,6 +112,7 @@ void crop() {
   PGM("__autogen__crop-1024x1024+256+256.pgm", crop);
   printf("crop: %llu\n", t1-t0);
   delete img;
+	delete crop;
 }
 
 int main() {
