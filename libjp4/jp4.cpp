@@ -114,12 +114,12 @@ bool JP4::open(const string& _filename) {
   dinfo.err = jpeg_std_error (&jerr);
 
   ifp = fopen(filename().c_str(), "rb");
-
-	if (!ifp)
-		return false;
+  if (!ifp)
+    return false;
 
   jpeg_create_decompress (&dinfo);
   jpeg_stdio_src (&dinfo, ifp);
+
   // instruct it to save EXIF at APP1 (0xe1) data (up to 64k)
   jpeg_save_markers(&dinfo, 0xe1, 0xffff);
   jpeg_read_header (&dinfo, TRUE);
@@ -172,7 +172,7 @@ bool JP4::open(const string& _filename) {
   jpeg_destroy_decompress (&dinfo);
   fclose(ifp);
   delete[] temp;
-	return true;
+  return true;
 }
 
 void JP4::readMakerNote() {
@@ -294,4 +294,83 @@ void JP4::getTagSRational(ExifTag tag, int* n, int* d) const {
 
 ExifEntry* JP4::getTagRaw(ExifTag tag) const {
   return exif_data_get_entry(_ed, tag);
+}
+
+void JP4::demux(vector<JP4*>& vec) {
+
+  // crop
+  printf("width: %d, height: %d\n", width(), height());
+      
+  ElphelMakerNote& note = makerNote();
+
+  int flipH[] = {note.flip_h1, note.flip_h2, note.flip_h3};
+  int flipV[] = {note.flip_v1, note.flip_v2, note.flip_v3};
+  int heights[] = {note.height1, note.height2, note.height3};
+  int blanks[] = {0, note.blank1, note.blank2};
+      
+  ROI roi[] = {{0, blanks[0], width(), heights[0]},
+	       {0, blanks[0]+heights[0]+blanks[1], width(), heights[1]},
+	       {0, blanks[0]+heights[0]+blanks[1]+heights[1]+blanks[2], width(), heights[2]}};
+    
+  for (int i=0; i<3; i++)                    
+    printf("ROI #%d: x=%d y=%d width=%d height=%d\n", i, roi[i].x, roi[i].y, roi[i].width, roi[i].height);
+        
+  for (int i=0; i<3; i++) 
+    printf("#%d: flipH=%d flipV=%d height=%d blanks=%d\n", i, flipH[i], flipV[i], heights[i], blanks[i]);
+
+  if (note.flip_ver) {
+    printf("flipping ROIs vertically.\n");
+    ROI tmp = roi[0];
+    roi[0] = roi[2];
+    roi[2] = tmp;
+  }
+
+  // invert frames flips if globals was set
+  if (note.flip_hor) {
+    printf("flipping individual frames horizontally.\n");
+    for (int i=0; i <3; i++) flipH[i] = 1-flipH[i];
+  }
+      
+  if (note.flip_ver) { 
+    printf("flipping individual frames vertically.\n");
+    for (int i=0; i <3; i++) flipV[i] = 1-flipV[i];
+  }
+                               
+  for (int i=0; i<3; i++) {
+    if (((roi[i].height & 1)==0 ) & (((roi[i].y+flipV[i])&1)!=0)) roi[i].height-=2;
+    roi[i].height &=~1;
+    if (((roi[i].y+flipV[i])&1)!=0) roi[i].y+=1;
+
+    if (((roi[i].width & 1)==0 ) & (((roi[i].x+flipH[i])&1)!=0)) roi[i].width-=2;
+    roi[i].width &=~1;
+    if (((roi[i].x+flipH[i])&1)!=0) roi[i].x+=1;
+  }
+      
+  for (int i=0; i<3; i++)                    
+    printf("ROI #%d: x=%d y=%d width=%d height=%d\n", i, roi[i].x, roi[i].y, roi[i].width, roi[i].height);
+        
+  for (int i=0; i<3; i++) 
+    printf("#%d: flipH=%d flipV=%d height=%d blanks=%d\n", i, flipH[i], flipV[i], heights[i], blanks[i]);
+
+  JP4* frame1 = crop(roi[0].x, roi[0].y, roi[0].width, roi[0].height);
+  frame1->makerNote().flip_hor = flipH[0];                                                                       
+  frame1->makerNote().flip_ver = flipV[0];
+  
+  JP4* frame2 = crop(roi[1].x, roi[1].y, roi[1].width, roi[1].height);
+  frame2->makerNote().flip_hor = flipH[1];                                                                       
+  frame2->makerNote().flip_ver = flipV[1];
+
+  JP4* frame3 = crop(roi[2].x, roi[2].y, roi[2].width, roi[2].height);
+  frame3->makerNote().flip_hor = flipH[2];                                                                       
+  frame3->makerNote().flip_ver = flipV[2];
+
+  vec.push_back(frame1);
+  vec.push_back(frame2);
+  vec.push_back(frame3);
+
+  for (int i=0; i<3; i++) {
+    if (flipH[i]) vec[i]->image()->flipY();
+    if (flipV[i]) vec[i]->image()->flipX();
+  }
+  
 }

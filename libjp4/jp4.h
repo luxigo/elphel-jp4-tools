@@ -26,6 +26,12 @@
 #include <string>
 using std::string;
 
+#include <memory>
+using std::auto_ptr;
+
+#include <vector>
+using std::vector;
+
 extern "C" {
 #include <libexif/exif-data.h>
 #include <libexif/exif-tag.h>
@@ -105,6 +111,8 @@ class JP4 {
   void writeJPEG(const string& jpegFilename, unsigned int quality) const;
 
   void writeDNG(const string& dngFilename, int bayerShift = -1) const;
+
+  void demux(vector<JP4*>& vec);
 
   //
   // EXIF support
