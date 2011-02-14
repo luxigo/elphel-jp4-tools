@@ -196,7 +196,7 @@ void JP4::readMakerNote() {
     _makerNote.bin_hor = 1;
     _makerNote.bin_ver = 1;
     _makerNote.composite = 0;
-   return;
+    return;
   }
 
   _makerNoteLength = makerNoteEntry->size/4;
