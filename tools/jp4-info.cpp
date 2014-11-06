@@ -43,14 +43,14 @@ int main(int argc, char** argv) {
 		exit(1);
 	}
 
-  printf("gain       : %5.4lf\t%5.4lf\t%5.4lf\t%5.4lf\n", elphel.gain[0],
+  printf("gain: %5.4lf %5.4lf %5.4lf %5.4lf\n", elphel.gain[0],
          elphel.gain[1], elphel.gain[2], elphel.gain[3]);
-  printf("gamma      : %5.4lf\t%5.4lf\t%5.4lf\t%5.4lf\n", elphel.gamma[0],
+  printf("gamma: %5.4lf %5.4lf %5.4lf %5.4lf\n", elphel.gamma[0],
          elphel.gamma[1], elphel.gamma[2], elphel.gamma[3]);
-  printf("gamma_scale: %5.4lf\t%5.4lf\t%5.4lf\t%5.4lf\n",
+  printf("gamma_scale: %5.4lf %5.4lf %5.4lf %5.4lf\n",
          elphel.gamma_scale[0], elphel.gamma_scale[1],
          elphel.gamma_scale[2], elphel.gamma_scale[3]);
-  printf("black      : %5.4lf\t%5.4lf\t%5.4lf\t%5.4lf\n", elphel.black[0],
+  printf("black: %5.4lf %5.4lf %5.4lf %5.4lf\n", elphel.black[0],
          elphel.black[1], elphel.black[2], elphel.black[3]);
 
   if (makerNoteLength >= 12) {
@@ -74,19 +74,19 @@ int main(int argc, char** argv) {
   if (makerNoteLength >= 14) {
     printf("composite: %d\n", elphel.composite);
 
-    printf("height1  : %d\n", elphel.height1);
-    printf("blank1   : %d\n", elphel.blank1);
-    printf("flip_h1  : %d\n", elphel.flip_h1);
-    printf("flip_v1  : %d\n", elphel.flip_v1);
+    printf("height1: %d\n", elphel.height1);
+    printf("blank1: %d\n", elphel.blank1);
+    printf("flip_h1: %d\n", elphel.flip_h1);
+    printf("flip_v1: %d\n", elphel.flip_v1);
 
-    printf("height2  : %d\n", elphel.height2);
-    printf("blank2   : %d\n", elphel.blank2);
-    printf("flip_h2  : %d\n", elphel.flip_h2);
-    printf("flip_v2  : %d\n", elphel.flip_v2);
+    printf("height2: %d\n", elphel.height2);
+    printf("blank2: %d\n", elphel.blank2);
+    printf("flip_h2: %d\n", elphel.flip_h2);
+    printf("flip_v2: %d\n", elphel.flip_v2);
 
-    printf("height3  : %d\n", elphel.height3);
-    printf("flip_h3  : %d\n", elphel.flip_h3);
-    printf("flip_v3  : %d\n", elphel.flip_v3);
+    printf("height3: %d\n", elphel.height3);
+    printf("flip_h3: %d\n", elphel.flip_h3);
+    printf("flip_v3: %d\n", elphel.flip_v3);
   }
 
   return 0;
