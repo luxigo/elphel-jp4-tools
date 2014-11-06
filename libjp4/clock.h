@@ -18,6 +18,8 @@ unsigned long long currentTimeMillis() {
 
 #elif defined(__linux)
 
+#include <time.h>
+
 unsigned long long currentTimeNano() {
   struct timespec t;
   clock_gettime(CLOCK_MONOTONIC, &t);
